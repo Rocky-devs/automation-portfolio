@@ -2,8 +2,6 @@
 Amazon Competitor Intelligence System - Phase 1
 Flask API triggered by Make.com schedule
 """
-from dotenv import load_dotenv
-load_dotenv()
 import os
 import traceback
 from datetime import datetime
