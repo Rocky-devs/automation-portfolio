@@ -1,0 +1,6 @@
+.env
+feisty-rigging-495511-b4-0b702e467c87.json
+__pycache__/
+*.pyc
+test_local.py
+.DS_Store
