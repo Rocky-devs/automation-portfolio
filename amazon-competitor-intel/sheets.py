@@ -48,15 +48,7 @@ def get_asin_list() -> list[dict]:
     return [r for r in rows if str(r.get("Active", "")).strip().upper() == "Y"]
 
 
-# 改成：app.py 启动时读一次，传进来用
 def get_all_history() -> dict[str, list]:
-    """
-    读一次 Product_History，返回按 ASIN 索引的字典。
-    {
-      "B08N5WRWNW": [oldest_row, ..., latest_row],
-      "B07XJ8C8F5": [...],
-    }
-    """
     ws = _worksheet("Product_History")
     all_rows = ws.get_all_records()
 
@@ -65,8 +57,12 @@ def get_all_history() -> dict[str, list]:
         asin = str(row.get("ASIN", "")).strip()
         if asin:
             grouped.setdefault(asin, []).append(row)
-    return grouped
 
+    # 按时间戳排序，确保最后一个是最新的
+    for asin in grouped:
+        grouped[asin].sort(key=lambda r: str(r.get("Timestamp", "")))
+
+    return grouped
 # ──────────────────────────────────────────────
 # WRITE
 # ──────────────────────────────────────────────
