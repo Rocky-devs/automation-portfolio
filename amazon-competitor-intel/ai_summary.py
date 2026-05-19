@@ -2,6 +2,7 @@
 Generates a daily priority summary using OpenRouter (free llama model).
 """
 import os
+import re
 import time
 import requests
 
@@ -81,6 +82,9 @@ def generate_summary(alerts: list[dict], products: list[dict]) -> str:
             continue
 
         resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"].strip()
+        content = resp.json()["choices"][0]["message"]["content"].strip()
+
+        content = re.sub(r'([🟡🟢💡])', r'\n\n\1', content)
+        return content
 
     return "AI summary unavailable: rate limited after 3 retries."
