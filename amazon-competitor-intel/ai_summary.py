@@ -43,15 +43,10 @@ ALERTS:
 {alert_block}
 
 Write a daily summary in exactly this format:
-
 🔴 HIGH: [1 sentence on most urgent item, or "None"]
-
 🟡 MEDIUM: [1 sentence on medium items, or "None"]
-
 🟢 LOW: [1 sentence on low items, or "None"]
-
 💡 ACTION: [1 concrete action the seller should consider today]
-
 Be direct. No fluff. Max 4 sentences total."""
 
 
