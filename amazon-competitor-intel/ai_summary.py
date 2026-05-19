@@ -79,7 +79,9 @@ def generate_summary(alerts: list[dict], products: list[dict]) -> str:
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"].strip()
 
-        content = re.sub(r'([🟡🟢💡])', r'\n\n\1', content)
+        content = re.sub(r'(🟡|MEDIUM:)', r'\n\n🟡', content)
+        content = re.sub(r'(🟢|LOW:)', r'\n\n🟢', content)
+        content = re.sub(r'(💡|ACTION:)', r'\n\n💡', content)
         return content
 
     return "AI summary unavailable: rate limited after 3 retries."
