@@ -63,6 +63,7 @@ def get_all_history() -> dict[str, list]:
         grouped[asin].sort(key=lambda r: str(r.get("Timestamp", "")))
 
     return grouped
+
 # ──────────────────────────────────────────────
 # WRITE
 # ──────────────────────────────────────────────
