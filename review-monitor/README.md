@@ -2,6 +2,8 @@
 
 Automated pipeline that monitors Google Maps reviews, analyzes sentiment with AI, and sends real-time alerts for negative feedback.
 
+📧 contact: zl103795192@gmail.com
+
 ## Live Demo
 [Watch demo video](https://youtu.be/kv1bD61ZQUA)
 
