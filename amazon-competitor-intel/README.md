@@ -2,6 +2,7 @@
 
 Automated Amazon competitor monitoring for sellers. Tracks price, rating, reviews, and BSR across multiple ASINs. Delivers AI-prioritized daily alerts straight to your inbox — no manual checking required. Runs 24/7 on Railway, triggered by self-hosted n8n.
 
+📧 contact: zl103795192@gmail.com
 ---
 
 ## Architecture
