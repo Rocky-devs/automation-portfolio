@@ -50,3 +50,4 @@ Built by Rocky — freelance automation developer based in Japan.
 Available for custom automation projects on [Upwork](https://www.upwork.com) and [Fiverr](https://www.fiverr.com).
 
 GitHub: [Rocky-devs](https://github.com/Rocky-devs/automation-portfolio)
+contact: zl103795192@gmail.com
