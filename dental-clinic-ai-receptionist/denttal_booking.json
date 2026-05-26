@@ -1,0 +1,314 @@
+{
+  "name": "denttal_booking",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dental-booking",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -176,
+        16
+      ],
+      "id": "6e90bad6-3908-4370-9fe5-7b81315ff096",
+      "name": "Webhook",
+      "webhookId": "dc03bedd-cfc4-46cf-9a9c-7430fdaede3a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst body = input.body || input;\n\n// 判断来源\nconst isRetell = body.event === 'call_analyzed';\nconst isTally = !isRetell && body.data && body.data.fields;\n\nif (isRetell) {\n  const call = body.call;\n  const analysis = call.call_analysis;\n\n  return {\n    source: 'retell',\n    call_id: call.call_id,\n    transcript: call.transcript,\n    summary: analysis.call_summary,\n    sentiment: analysis.user_sentiment,\n    call_successful: call.call_successful,\n    duration_seconds: call.duration_ms / 1000,\n  };\n\n} else if (isTally) {\n  const fields = body.data.fields;\n  const getField = (label) => fields.find(f => f.label === label);\n  const getDropdownText = (label) => {\n    const field = getField(label);\n    if (!field) return '';\n    const selectedId = field.value[0];\n    const option = field.options.find(o => o.id === selectedId);\n    return option ? option.text : '';\n  };\n\n  return {\n    source: 'tally',\n    patientName: getField('Patient Name')?.value || '',\n    phone: getField('Phone Number')?.value || '',\n    email: getField('Email')?.value || '',\n    appointmentDate: getField('Appointment Date')?.value || '',\n    appointmentTime: getDropdownText('Appointment Time'),\n    service: getField('Doctor/Service')?.value || '',\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        16
+      ],
+      "id": "3c76c537-6ef4-455d-9357-89f10d903787",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b6ba7f0f-39c1-4eee-bf08-d5974a6f9ff1",
+              "leftValue": "={{ $json.source }}",
+              "rightValue": "tally",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        16
+      ],
+      "id": "1258e922-a498-4656-9c67-f011e943bea2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "2075275581",
+        "text": "=🦷 *New Appointment Request (Form)*\n\n👤 *Name:* {{ $('Code in JavaScript').item.json.patientName }}\n📞 *Phone:* {{ $('Code in JavaScript').item.json.phone }}\n🦷 *Service:* {{ $('Code in JavaScript').item.json.service }}\n📅 *Date:* {{ $('Code in JavaScript').item.json.appointmentDate }}\n🕐 *Time:* {{ $('Code in JavaScript').item.json.appointmentTime }}\n\n⚠️ Please call the patient to confirm.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        -80
+      ],
+      "id": "97e893ec-797b-42a8-a17b-34f147abec26",
+      "name": "📱 Clinic: New Appointment Alert1",
+      "webhookId": "418c7714-ee62-4dd1-8466-f3bdb163c65d",
+      "credentials": {
+        "telegramApi": {
+          "id": "7w00u7CwPZytTVWH",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "=New Appointment Request – {{ $('Code in JavaScript').item.json.patientName }}",
+        "message": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);\">\n\n  <!-- Header -->\n  <div style=\"background-color: #16a34a; padding: 28px 24px; text-align: center;\">\n    <h1 style=\"color: white; margin: 0; font-size: 22px;\">🦷 New Appointment Request</h1>\n  </div>\n\n  <!-- Body -->\n  <div style=\"padding: 32px; background-color: #ffffff;\">\n    <p style=\"color: #475569;\">A new appointment has been submitted via <b>online form</b>. Please call the patient to confirm.</p>\n\n    <div style=\"background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 24px 0;\">\n      <p style=\"margin: 10px 0; color: #1e293b;\">👤 <b>Name:</b> {{ $('Code in JavaScript').item.json.patientName }}</p>\n      <p style=\"margin: 10px 0; color: #1e293b;\">📞 <b>Phone:</b> {{ $('Code in JavaScript').item.json.phone }}</p>\n      <p style=\"margin: 10px 0; color: #1e293b;\">📧 <b>Email:</b> {{ $('Code in JavaScript').item.json.email }}</p>\n      <p style=\"margin: 10px 0; color: #1e293b;\">📅 <b>Preferred Date:</b> {{ $('Code in JavaScript').item.json.appointmentDate }}</p>\n      <p style=\"margin: 10px 0; color: #1e293b;\">🕐 <b>Preferred Time:</b> {{ $('Code in JavaScript').item.json.appointmentTime }}</p>\n      <p style=\"margin: 10px 0; color: #1e293b;\">🦷 <b>Service:</b> {{ $('Code in JavaScript').item.json.service }}</p>\n    </div>\n\n    <p style=\"color: #e11d48; font-weight: bold;\">⚠️ Please call the patient to confirm the appointment.</p>\n  </div>\n\n  <!-- Footer -->\n  <div style=\"background-color: #1e293b; padding: 16px; text-align: center;\">\n    <p style=\"color: #94a3b8; margin: 0; font-size: 12px;\">Bright Smile Dental Clinic · Automated by AI Workflow</p>\n  </div>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        -80
+      ],
+      "id": "8282f1b2-3900-407c-879b-fef66d0c36a0",
+      "name": "📧 Clinic: New Appointment",
+      "webhookId": "9bdaeddf-71ae-4109-80ce-bb16aecb7e6b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "S580avAywB9I4Gvk",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "zl103795192@gmail.com",
+        "subject": "=Your Appointment at Bright Smile Dental Clinic ✅",
+        "message": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);\">\n  \n  <!-- Header -->\n  <div style=\"background-color: #2563eb; padding: 28px 24px; text-align: center;\">\n    <h1 style=\"color: white; margin: 0; font-size: 22px;\">🦷 Bright Smile Dental Clinic</h1>\n  </div>\n\n  <!-- Body -->\n  <div style=\"padding: 32px; background-color: #ffffff;\">\n    <h2 style=\"color: #1e293b; margin-top: 0;\">Appointment Confirmed ✅</h2>\n    <p style=\"color: #475569;\">Hi <b>{{ $('Code in JavaScript').item.json.patientName }}</b>,</p>\n    <p style=\"color: #475569;\">Thank you for booking with us. Here are your appointment details:</p>\n\n    <!-- Details Card -->\n    <div style=\"background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 24px 0;\">\n      <p style=\"margin: 10px 0; color: #1e293b;\">📅 <b>Date:</b> {{ $('Code in JavaScript').item.json.appointmentDate }}</p>\n      <p style=\"margin: 10px 0; color: #1e293b;\">🕐 <b>Time:</b> {{ $('Code in JavaScript').item.json.appointmentTime }}</p>\n      <p style=\"margin: 10px 0; color: #1e293b;\">🦷 <b>Service:</b> {{ $('Code in JavaScript').item.json.service }}</p>\n      <p style=\"margin: 10px 0; color: #1e293b;\">📞 <b>Contact:</b> {{ $('Code in JavaScript').item.json.phone }}</p>\n    </div>\n\n    <p style=\"color: #475569;\">Please arrive <b>10 minutes early</b> and bring a valid ID.</p>\n    <p style=\"color: #475569;\">Our team will call you to confirm your appointment shortly.</p>\n  </div>\n\n  <!-- Footer -->\n  <div style=\"background-color: #1e293b; padding: 16px; text-align: center;\">\n    <p style=\"color: #94a3b8; margin: 0; font-size: 12px;\">Bright Smile Dental Clinic · Automated by AI Workflow</p>\n  </div>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        -256
+      ],
+      "id": "b4bf0233-886a-4a61-9380-610b1cac8661",
+      "name": "📧 Patient: Booking Confirmation",
+      "webhookId": "f4d48c0d-0c2e-48a9-a682-9fb2689daff6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "S580avAywB9I4Gvk",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "zl103795192@gmail.com",
+        "subject": "New Appointment Request – Missed Call (AI Recorded)",
+        "message": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);\">    \n<!-- Header -->\n<div style=\"background-color: #dc2626; padding: 28px 24px; text-align: center;\">     <h1 style=\"color: white; margin: 0; font-size: 22px;\">📞 Missed Call – AI Recorded</h1>   </div>    \n<!-- Body -->  \n<div style=\"padding: 32px; background-color: #ffffff;\">     <p style=\"color: #475569;\">A patient called after hours. Our AI assistant answered and recorded the following details.</p>      <div style=\"background-color: #f1f5f9; border-radius: 8px; padding: 20px; margin: 24px 0;\">       <p style=\"margin: 10px 0; color: #1e293b;\">🤖 <b>Source:</b> AI Voice Call (Retell)</p>       <p style=\"margin: 10px 0; color: #1e293b;\">⏱️ <b>Duration:</b> {{ $('Code in JavaScript').item.json.duration_seconds }}s</p>       <p style=\"margin: 10px 0; color: #1e293b;\">😊 <b>Sentiment:</b> {{ $('Code in JavaScript').item.json.sentiment }}</p>     </div>      <div style=\"background-color: #fefce8; border-left: 4px solid #eab308; padding: 16px; border-radius: 4px; margin: 16px 0;\">       <p style=\"margin: 0 0 8px 0; color: #1e293b; font-weight: bold;\">📋 Call Summary:</p>       <p style=\"margin: 0; color: #475569;\">{{ $('Code in JavaScript').item.json.summary }}</p>     </div>      <details style=\"margin: 16px 0;\">       <summary style=\"cursor: pointer; color: #2563eb; font-weight: bold;\">📜 View Full Transcript</summary>       <div style=\"background-color: #f8fafc; padding: 16px; border-radius: 8px; margin-top: 8px; white-space: pre-wrap; font-size: 13px; color: #475569;\">{{ $('Code in JavaScript').item.json.transcript }}</div>     </details>      <p style=\"color: #e11d48; font-weight: bold;\">⚠️ Please call the patient back to confirm their appointment.</p>   </div>  \n<!-- Footer -->\n<div style=\"background-color: #1e293b; padding: 16px; text-align: center;\">     <p style=\"color: #94a3b8; margin: 0; font-size: 12px;\">Bright Smile Dental Clinic · Automated by AI Workflow</p>   </div>  </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        464,
+        128
+      ],
+      "id": "ba142204-ce78-4a76-a37a-4994c92286cc",
+      "name": "📧 Clinic: Missed Call",
+      "webhookId": "558582a6-9e5c-448b-9bec-950a39f6f3f0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "S580avAywB9I4Gvk",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "2075275581",
+        "text": "=📞 *Missed Call – AI Recorded*  \n\n🤖 *Source:* Retell AI Voice Call\n⏱️ *Duration:* {{ $('Code in JavaScript').item.json.duration_seconds }}s\n😊 *Sentiment:* {{ $('Code in JavaScript').item.json.sentiment }}\n\n📋 *Summary:* {{ $('Code in JavaScript').item.json.summary }}\n\n⚠️ Please call the patient back to confirm their appointment.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        128
+      ],
+      "id": "1a7d95e3-1b3e-4bbc-943b-26140a234e8b",
+      "name": "📱 Clinic: Missed Call Alert",
+      "webhookId": "d7bed632-452e-4311-ac6b-7739a93521fa",
+      "credentials": {
+        "telegramApi": {
+          "id": "7w00u7CwPZytTVWH",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "2075275581",
+        "text": "=🦷 Bright Smile Dental Clinic  Thank you for calling us!\n✅  We've received your appointment request: 📋 {{ $('Code in JavaScript').item.json.summary }}  Our team will call you back shortly to confirm. Please arrive 10 minutes early and bring a valid ID. \n😊  — Bright Smile Dental Clinic",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        304
+      ],
+      "id": "f35c2096-1778-4081-ae16-5419f01264ad",
+      "name": "Send a text message",
+      "webhookId": "917d72ee-ba10-4019-b411-32ec9ec3b212",
+      "credentials": {
+        "telegramApi": {
+          "id": "7w00u7CwPZytTVWH",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "event": "call_analyzed",
+          "call": {
+            "call_id": "call_ec7a6ab59e1904d168b6859c895",
+            "call_status": "ended",
+            "duration_ms": 65201,
+            "transcript": "Agent: Hi, thanks for calling Bright Smile Dental Clinic! Our team is unavailable right now — I'm Sarah, an AI assistant. I'll take your details and we'll call you right back. \nUser: Hi. I'd like to book a appointment My name is John Smith. My number is zero zero nine zero one two three four five six seven eight. I'd like a cleaning. Next to two day afternoon works for me. \nAgent: Thank you, John. Just to confirm, your phone number is 009012345678, and you're interested in a cleaning. You'd prefer an appointment two days from now in the afternoon. Is that correct?\nUser: That's correct. Thank you. \nAgent: Thank you, John. We've got your details: John Smith, 009012345678, cleaning, preferred in two days in the afternoon. Someone from our team will call you back shortly to confirm your appointment. Have a great day!",
+            "call_analysis": {
+              "call_summary": "The user, John Smith, called Bright Smile Dental Clinic to book a cleaning appointment for two days from now in the afternoon.",
+              "user_sentiment": "Positive",
+              "call_successful": true
+            }
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "📧 Clinic: New Appointment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📧 Patient: Booking Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📧 Clinic: Missed Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Clinic: New Appointment": {
+      "main": [
+        [
+          {
+            "node": "📱 Clinic: New Appointment Alert1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Clinic: Missed Call": {
+      "main": [
+        [
+          {
+            "node": "📱 Clinic: Missed Call Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a5f87c5e-de2f-475a-b714-9ed625bad22b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e688c869034f7a7abdd89c7f5f8315865ee5acdc2f84c5e8555b1090b4ea0476"
+  },
+  "id": "W7hRzmLtjPapXPSX",
+  "tags": []
+}
